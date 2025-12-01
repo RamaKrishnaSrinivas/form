@@ -10,12 +10,14 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- PostgreSQL settings ----------------
-DB_HOST = os.getenv('DB_HOST', 'dpg-d4mj95be5dus738cq6rg-a.oregon-postgres.render.com')
-DB_NAME = os.getenv('DB_NAME', 'form_wrvb')
-DB_USER = os.getenv('DB_USER', 'form_wrvb_user')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'J9BureB3CNSwpmuwDh2Zxp0o8BLs10tq')
-DB_PORT = os.getenv('DB_PORT', 5432)
-
+conn = psycopg2.connect(
+    dbname="form_wrvb",
+    user="form_wrvb_user",
+    password="J9BureB3CNSwpmuwDh2ZrpOo8BLs10tq",
+    host="dpg-d4mj95be5dus738cq6rg-a.oregon-postgres.render.com",
+    port="5432",
+    sslmode="require"
+)
 # ---------------- Database connection ----------------
 def connect_to_db():
     try:
