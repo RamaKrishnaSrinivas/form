@@ -1,52 +1,56 @@
 import os
 from flask import Flask, render_template_string, request, redirect, url_for, flash
 import psycopg2
+# Add the 'ssl' module import to configure SSL context
+import ssl
 from dotenv import load_dotenv
-import dj_database_url
+# You are using dj_database_url in connect_to_db, but it's not strictly necessary if you build the string manually.
+# For local fallback simplicity, we will stick to manual connection params.
 
 # ---------------- Load environment variables ----------------
+# This loads variables from a local .env file if it exists (for local testing)
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
-# ---------------- PostgreSQL settings ----------------
-DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
-DB_NAME = os.getenv('DB_NAME', 'notepad_db')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'skro@0513')
-DB_PORT = os.getenv('DB_PORT', 5432)
-
-# ---------------- Database connection ----------------
+# ---------------- Database connection function ----------------
 def connect_to_db():
-    # Try connecting using the standard DATABASE_URL environment variable first (Render's default)
-    database_url = os.getenv('DATABASE_URL')
+    # Retrieve connection parameters from environment variables
+    # These should be set on Render or in your local .env file
+    db_host = os.getenv('DB_HOST')
+    db_name = os.getenv('DB_NAME')
+    db_user = os.getenv('DB_USER')
+    db_password = os.getenv('DB_PASSWORD')
+    # Use 5432 as a default port
+    db_port = os.getenv('DB_PORT', 5432) 
     
-    if database_url:
-        try:
-            # dj_database_url parses the URL including the 'sslmode=require' parameter
-            conn_params = dj_database_url.parse(database_url)
-            return psycopg2.connect(**conn_params)
-        except Exception as e:
-            print(f"Error connecting via DATABASE_URL: {e}")
-            # If connection via URL fails, the function returns None
-            return None
-    
-    # Fallback for local development using individual variables
-    else:
-        try:
-            print("Connecting using individual variables (local fallback).")
-            return psycopg2.connect(
-                host=DB_HOST,
-                database=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                port=DB_PORT
-                # Note: Local connections usually don't need sslmode='require'
-            )
-        except psycopg2.Error as e:
-            print(f"Error connecting to DB: {e}")
-            return None
+    conn = None
+    try:
+        # Render requires SSL connection with 'sslmode=require'
+        # We configure the SSL context explicitly for psycopg2
+        ssl_context = ssl.create_default_context()
+        # The default context usually verifies certificates, which is correct for Render.
+        
+        # Connect using the individual parameters
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password,
+            port=db_port,
+            # Pass the configured SSL context to psycopg2
+            sslmode='require', 
+            sslcontext=ssl_context
+        )
+        print("Database connection successful.")
+        return conn
+    except psycopg2.Error as e:
+        # Log the error details
+        print(f"Error connecting to DB: {e}")
+        # Optionally, flash an error message if within a request context
+        # flash("Database connection failed. Please try again later.", "red") 
+        return None
         
 # ---------------- Create users table ----------------
 def create_table():
@@ -68,11 +72,14 @@ def create_table():
             print("Table 'users' created or already exists.")
         except Exception as e:
             print("Error creating table:", e)
+            conn.rollback() # Rollback on error
         finally:
             conn.close()
 
+# Ensure the table is created when the app starts
 create_table()
 
+# (The rest of your app routes, templates, and styles remain the same)
 # ---------------- Basic CSS ----------------
 base_style = """
     <style>
@@ -150,12 +157,20 @@ def index():
                     flash("Successfully Saved!", "green")
                     return redirect(url_for('index'))
             except psycopg2.Error as e:
-                flash(f"Invalid data or DB error: {e}", "red")
+                # In a real app, you'd log the full error but provide a friendly message to the user.
+                print(f"Database error during insertion: {e}") 
+                flash("An error occurred while saving your data. Please check your inputs.", "red")
+                conn.rollback() # Ensure transaction is closed properly
             finally:
+                cur.close()
                 conn.close()
 
     return render_template_string(index_template)
 
 # ---------------- Run App ----------------
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    # When deployed on Render, Render sets the PORT environment variable.
+    # We should use os.getenv('PORT', 5000) to respect the host environment.
+    port = int(os.getenv('PORT', 5000))
+    # debug=False is good practice for production
+    app.run(debug=False, host='0.0.0.0', port=port)
