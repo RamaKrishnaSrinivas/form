@@ -16,24 +16,37 @@ DB_NAME = os.getenv('DB_NAME', 'notepad_db')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'skro@0513')
 DB_PORT = os.getenv('DB_PORT', 5432)
-DB_SSLMODE = os.getenv('DB_SSLMODE', 'disable') 
 
 # ---------------- Database connection ----------------
 def connect_to_db():
-    # Try connecting using the standard DATABASE_URL environment variable first
-        database_url = os.getenv('DATABASE_URL')
+    # Try connecting using the standard DATABASE_URL environment variable first (Render's default)
+    database_url = os.getenv('DATABASE_URL')
     
-    if not database_url:
-        print("Error: DATABASE_URL environment variable not set.")
-        return None
-        
-    try:
-        # dj_database_url parses the URL into psycopg2 arguments, including the SSL mode
-        conn_params = dj_database_url.parse(database_url)
-        return psycopg2.connect(**conn_params)
-    except Exception as e:
-        print(f"Error connecting to DB: {e}")
-        return None
+    if database_url:
+        try:
+            # dj_database_url parses the URL including the 'sslmode=require' parameter
+            conn_params = dj_database_url.parse(database_url)
+            return psycopg2.connect(**conn_params)
+        except Exception as e:
+            print(f"Error connecting via DATABASE_URL: {e}")
+            # If connection via URL fails, the function returns None
+            return None
+    
+    # Fallback for local development using individual variables
+    else:
+        try:
+            print("Connecting using individual variables (local fallback).")
+            return psycopg2.connect(
+                host=DB_HOST,
+                database=DB_NAME,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                port=DB_PORT
+                # Note: Local connections usually don't need sslmode='require'
+            )
+        except psycopg2.Error as e:
+            print(f"Error connecting to DB: {e}")
+            return None
         
 # ---------------- Create users table ----------------
 def create_table():
