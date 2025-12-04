@@ -21,30 +21,20 @@ DB_SSLMODE = os.getenv('DB_SSLMODE', 'disable')
 # ---------------- Database connection ----------------
 def connect_to_db():
     # Try connecting using the standard DATABASE_URL environment variable first
-    database_url = os.getenv('DATABASE_URL')
-    if database_url:
-        try:
-            # dj_database_url parses the URL into psycopg2 arguments
-            conn_params = dj_database_url.parse(database_url)
-            return psycopg2.connect(**conn_params)
-        except Exception as e:
-            print(f"Error connecting via DATABASE_URL: {e}")
-            return None
+        database_url = os.getenv('DATABASE_URL')
     
-    # Fallback to individual variables if DATABASE_URL is not set (useful for local testing)
+    if not database_url:
+        print("Error: DATABASE_URL environment variable not set.")
+        return None
+        
     try:
-        return psycopg2.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            port=DB_PORT,
-            sslmode=DB_SSLMODE
-        )
-    except psycopg2.Error as e:
+        # dj_database_url parses the URL into psycopg2 arguments, including the SSL mode
+        conn_params = dj_database_url.parse(database_url)
+        return psycopg2.connect(**conn_params)
+    except Exception as e:
         print(f"Error connecting to DB: {e}")
         return None
-
+        
 # ---------------- Create users table ----------------
 def create_table():
     conn = connect_to_db()
