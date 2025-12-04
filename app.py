@@ -16,6 +16,7 @@ DB_NAME = os.getenv('DB_NAME', 'notepad_db')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'skro@0513')
 DB_PORT = os.getenv('DB_PORT', 5432)
+DB_SSLMODE = os.getenv('DB_SSLMODE', 'disable') 
 
 # ---------------- Database connection ----------------
 def connect_to_db():
