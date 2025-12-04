@@ -16,40 +16,29 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- Database connection function ----------------
 def connect_to_db():
-    # Retrieve connection parameters from environment variables
-    # These should be set on Render or in your local .env file
     db_host = os.getenv('DB_HOST')
     db_name = os.getenv('DB_NAME')
     db_user = os.getenv('DB_USER')
     db_password = os.getenv('DB_PASSWORD')
-    # Use 5432 as a default port
     db_port = os.getenv('DB_PORT', 5432) 
     
     conn = None
     try:
-        # Render requires SSL connection with 'sslmode=require'
-        # We configure the SSL context explicitly for psycopg2
-        ssl_context = ssl.create_default_context()
-        # The default context usually verifies certificates, which is correct for Render.
-        
-        # Connect using the individual parameters
+        # Connect using the individual parameters, relying on psycopg2's default SSL handling
+        # which respects 'sslmode=require'
         conn = psycopg2.connect(
             host=db_host,
             database=db_name,
             user=db_user,
             password=db_password,
             port=db_port,
-            # Pass the configured SSL context to psycopg2
-            sslmode='require', 
-            sslcontext=ssl_context
+            # This is sufficient for Render in most cases:
+            sslmode='require' 
         )
         print("Database connection successful.")
         return conn
     except psycopg2.Error as e:
-        # Log the error details
         print(f"Error connecting to DB: {e}")
-        # Optionally, flash an error message if within a request context
-        # flash("Database connection failed. Please try again later.", "red") 
         return None
         
 # ---------------- Create users table ----------------
