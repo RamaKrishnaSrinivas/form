@@ -38,7 +38,7 @@ def connect_to_db():
             user=DB_USER,
             password=DB_PASSWORD,
             port=DB_PORT,
-            sslmode='require'
+            sslmode='DB_SSLMODE'
         )
     except psycopg2.Error as e:
         print(f"Error connecting to DB: {e}")
