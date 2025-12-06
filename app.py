@@ -1,39 +1,42 @@
 import os
 from flask import Flask, render_template_string, request, redirect, url_for, flash
 import psycopg2
-# Add the 'ssl' module import to configure SSL context
-import ssl
-from dotenv import load_dotenv
-# Import dj_database_url for parsing the URL
+# Import dj_database_url for parsing the URL and handling SSL
 import dj_database_url 
-# You are using dj_database_url in connect_to_db, but it's not strictly necessary if you build the string manually.
-# For local fallback simplicity, we will stick to manual connection params.
+from dotenv import load_dotenv
 
 # ---------------- Load environment variables ----------------
-# This loads variables from a local .env file if it exists (for local testing)
+# For local development, this loads variables from a local .env file.
+# On Render, the variables are provided by the environment automatically.
 load_dotenv()
 
 app = Flask(__name__)
+# Fetch the SECRET_KEY from environment variables for security.
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- Database connection function ----------------
 def connect_to_db():
+    # Retrieve the full database URL from environment variables
     database_url = os.getenv('DATABASE_URL')
     
     if not database_url:
         print("Error: DATABASE_URL environment variable not found.")
         return None
 
+    conn = None
     try:
         # 1. Parse the URL using dj_database_url
         conn_params = dj_database_url.parse(database_url)
         
-        # 2. **CRITICAL FIX:** Remove the 'ENGINE' key which is Django-specific
-        if 'ENGINE' in conn_params:
-            del conn_params['ENGINE']
-            
+        # 2. CRITICAL FIX: Convert all dictionary keys to lowercase (e.g., 'USER' -> 'user')
+        #    and remove the 'ENGINE' key which is Django-specific and causes psycopg2 to error.
+        cleaned_params = {k.lower(): v for k, v in conn_params.items()}
+
+        if 'engine' in cleaned_params:
+            del cleaned_params['engine'] 
+
         # 3. Connect using the cleaned parameters
-        conn = psycopg2.connect(**conn_params)
+        conn = psycopg2.connect(**cleaned_params)
         print("Database connection successful using DATABASE_URL.")
         return conn
     except Exception as e:
@@ -62,13 +65,13 @@ def create_table():
             print("Error creating table:", e)
             conn.rollback() # Rollback on error
         finally:
+            cur.close()
             conn.close()
 
 # Ensure the table is created when the app starts
 create_table()
 
-# (The rest of your app routes, templates, and styles remain the same)
-# ---------------- Basic CSS ----------------
+# ---------------- Basic CSS (Remains the same) ----------------
 base_style = """
     <style>
         body { font-family: Arial, sans-serif; background: #b0aebf; margin:0; padding:0; }
@@ -89,7 +92,7 @@ base_style = """
     </style>
 """
 
-# ---------------- Templates ----------------
+# ---------------- Templates (Remains the same) ----------------
 index_template = base_style + """
     <div class="container">
         <h1>Welcome to Gangamma Trust</h1>
@@ -118,7 +121,7 @@ index_template = base_style + """
     </div>
 """
 
-# ---------------- Routes ----------------
+# ---------------- Routes (Remains the same) ----------------
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -145,10 +148,9 @@ def index():
                     flash("Successfully Saved!", "green")
                     return redirect(url_for('index'))
             except psycopg2.Error as e:
-                # In a real app, you'd log the full error but provide a friendly message to the user.
                 print(f"Database error during insertion: {e}") 
                 flash("An error occurred while saving your data. Please check your inputs.", "red")
-                conn.rollback() # Ensure transaction is closed properly
+                conn.rollback()
             finally:
                 cur.close()
                 conn.close()
@@ -157,8 +159,6 @@ def index():
 
 # ---------------- Run App ----------------
 if __name__ == '__main__':
-    # When deployed on Render, Render sets the PORT environment variable.
-    # We should use os.getenv('PORT', 5000) to respect the host environment.
+    # Use the PORT provided by the environment (Render), default to 5000 for local dev
     port = int(os.getenv('PORT', 5000))
-    # debug=False is good practice for production
     app.run(debug=False, host='0.0.0.0', port=port)
