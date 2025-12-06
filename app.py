@@ -1,17 +1,15 @@
 import os
 from flask import Flask, render_template_string, request, redirect, url_for, flash
 import psycopg2
-# Import dj_database_url for parsing the URL and handling SSL
-import dj_database_url 
+# We do not need dj_database_url or ssl imports with this approach
 from dotenv import load_dotenv
 
 # ---------------- Load environment variables ----------------
-# For local development, this loads variables from a local .env file.
-# On Render, the variables are provided by the environment automatically.
+# Loads variables from a local .env file during local development
 load_dotenv()
 
 app = Flask(__name__)
-# Fetch the SECRET_KEY from environment variables for security.
+# Fetches the SECRET_KEY from environment variables for security.
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- Database connection function ----------------
@@ -25,22 +23,14 @@ def connect_to_db():
 
     conn = None
     try:
-        # 1. Parse the URL using dj_database_url
-        conn_params = dj_database_url.parse(database_url)
-        
-        # 2. CRITICAL FIX: Convert all dictionary keys to lowercase (e.g., 'USER' -> 'user')
-        #    and remove the 'ENGINE' key which is Django-specific and causes psycopg2 to error.
-        cleaned_params = {k.lower(): v for k, v in conn_params.items()}
-
-        if 'engine' in cleaned_params:
-            del cleaned_params['engine'] 
-
-        # 3. Connect using the cleaned parameters
-        conn = psycopg2.connect(**cleaned_params)
-        print("Database connection successful using DATABASE_URL.")
+        # Connect using the full DATABASE_URL string directly.
+        # Psycopg2 understands this DSN format natively and handles 
+        # parameters like sslmode=require from the URL automatically.
+        conn = psycopg2.connect(database_url)
+        print("Database connection successful using raw DATABASE_URL string.")
         return conn
     except Exception as e:
-        print(f"Error connecting via DATABASE_URL: {e}")
+        print(f"Error connecting to DB using DSN string: {e}")
         return None
         
 # ---------------- Create users table ----------------
@@ -71,7 +61,7 @@ def create_table():
 # Ensure the table is created when the app starts
 create_table()
 
-# ---------------- Basic CSS (Remains the same) ----------------
+# ---------------- Basic CSS ----------------
 base_style = """
     <style>
         body { font-family: Arial, sans-serif; background: #b0aebf; margin:0; padding:0; }
@@ -92,7 +82,7 @@ base_style = """
     </style>
 """
 
-# ---------------- Templates (Remains the same) ----------------
+# ---------------- Templates ----------------
 index_template = base_style + """
     <div class="container">
         <h1>Welcome to Gangamma Trust</h1>
@@ -121,7 +111,7 @@ index_template = base_style + """
     </div>
 """
 
-# ---------------- Routes (Remains the same) ----------------
+# ---------------- Routes ----------------
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
