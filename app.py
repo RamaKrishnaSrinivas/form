@@ -4,6 +4,8 @@ import psycopg2
 # Add the 'ssl' module import to configure SSL context
 import ssl
 from dotenv import load_dotenv
+# Import dj_database_url for parsing the URL
+import dj_database_url 
 # You are using dj_database_url in connect_to_db, but it's not strictly necessary if you build the string manually.
 # For local fallback simplicity, we will stick to manual connection params.
 
@@ -16,29 +18,25 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- Database connection function ----------------
 def connect_to_db():
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
-    db_user = os.getenv('DB_USER')
-    db_password = os.getenv('DB_PASSWORD')
-    db_port = os.getenv('DB_PORT', 5432) 
+    # Retrieve the full database URL from environment variables
+    # On Render, this is automatically provided as 'DATABASE_URL'
+    database_url = os.getenv('DATABASE_URL')
     
-    conn = None
+    if not database_url:
+        print("Error: DATABASE_URL environment variable not found.")
+        # Optional fallback for local dev if you still use individual variables locally
+        # return psycopg2.connect(host=os.getenv('DB_HOST'), etc.)
+        return None
+
     try:
-        # Connect using the individual parameters, relying on psycopg2's default SSL handling
-        # which respects 'sslmode=require'
-        conn = psycopg2.connect(
-            host=db_host,
-            database=db_name,
-            user=db_user,
-            password=db_password,
-            port=db_port,
-            # This is sufficient for Render in most cases:
-            sslmode='require' 
-        )
-        print("Database connection successful.")
+        # dj_database_url parses the URL and automatically adds the 
+        # required 'sslmode=require' parameter needed for Render Postgres.
+        conn_params = dj_database_url.parse(database_url)
+        conn = psycopg2.connect(**conn_params)
+        print("Database connection successful using DATABASE_URL.")
         return conn
-    except psycopg2.Error as e:
-        print(f"Error connecting to DB: {e}")
+    except Exception as e:
+        print(f"Error connecting via DATABASE_URL: {e}")
         return None
         
 # ---------------- Create users table ----------------
