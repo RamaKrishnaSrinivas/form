@@ -18,20 +18,21 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # ---------------- Database connection function ----------------
 def connect_to_db():
-    # Retrieve the full database URL from environment variables
-    # On Render, this is automatically provided as 'DATABASE_URL'
     database_url = os.getenv('DATABASE_URL')
     
     if not database_url:
         print("Error: DATABASE_URL environment variable not found.")
-        # Optional fallback for local dev if you still use individual variables locally
-        # return psycopg2.connect(host=os.getenv('DB_HOST'), etc.)
         return None
 
     try:
-        # dj_database_url parses the URL and automatically adds the 
-        # required 'sslmode=require' parameter needed for Render Postgres.
+        # 1. Parse the URL using dj_database_url
         conn_params = dj_database_url.parse(database_url)
+        
+        # 2. **CRITICAL FIX:** Remove the 'ENGINE' key which is Django-specific
+        if 'ENGINE' in conn_params:
+            del conn_params['ENGINE']
+            
+        # 3. Connect using the cleaned parameters
         conn = psycopg2.connect(**conn_params)
         print("Database connection successful using DATABASE_URL.")
         return conn
