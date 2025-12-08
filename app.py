@@ -88,13 +88,13 @@ index_template = base_style + """
     <div class="container">
         <h1>RKSO FORM</h1>
         <form method="POST" action="/">
-            <label>Name</label>
+            <label>NAME</label>
             <input type="text" name="name" required>
-            <label>Mobile</label>
+            <label>MOBILE</label>
             <input type="tel" name="mobile" required>
-            <label>Email</label>
+            <label>EMAIL</label>
             <input type="email" name="email" required>
-            <label>Amount</label>
+            <label>ADDRESS</label>
             <input type="text" name="address" required>
             <label>DOB</label>
             <input type="date" name="dob" required>
