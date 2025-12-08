@@ -43,10 +43,11 @@ def create_table():
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(100) NOT NULL,
-                    mobile BIGINT UNIQUE NOT NULL,
+                    mobile INT UNIQUE NOT NULL,
                     email VARCHAR(255) UNIQUE NOT NULL,
-                    amount INT NOT NULL,
-                    date DATE NOT NULL
+                    address INT NOT NULL,
+                    dob DATE NOT NULL,
+                    feedback VARCHAR(255) NOT NULL
                 )
             """)
             conn.commit()
@@ -85,7 +86,7 @@ base_style = """
 # ---------------- Templates ----------------
 index_template = base_style + """
     <div class="container">
-        <h1>Welcome to Gangamma Trust</h1>
+        <h1>RKSO FORM</h1>
         <form method="POST" action="/">
             <label>Name</label>
             <input type="text" name="name" required>
@@ -94,9 +95,11 @@ index_template = base_style + """
             <label>Email</label>
             <input type="email" name="email" required>
             <label>Amount</label>
-            <input type="text" name="amount" required>
-            <label>Date</label>
-            <input type="date" name="date" required>
+            <input type="text" name="address" required>
+            <label>DOB</label>
+            <input type="date" name="dob" required>
+            <label>FEEDBACK</label>
+            <input type="text" name="feedback" required>
             <input type="submit" value="SUBMIT">
         </form>
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -118,8 +121,9 @@ def index():
         name = request.form['name']
         mobile = request.form['mobile']
         email = request.form['email']
-        amount = request.form['amount']
-        date = request.form['date']
+        address = request.form['address']
+        dob = request.form['dob']
+        feedback = request.form['feedback']
 
         conn = connect_to_db()
         if conn:
