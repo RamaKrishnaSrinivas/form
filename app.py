@@ -1,28 +1,15 @@
-ort=port)
 import os
 from flask import Flask, render_template_string, request, redirect, url_for, flash
 import psycopg2
-
-# We do not need dj_database_url or ssl imports with this approach
-
 from dotenv import load_dotenv
 
 # ---------------- Load environment variables ----------------
-# Loads variables from a local .env file during local development
-
 load_dotenv()
-
 app = Flask(__name__)
-
-# Fetches the SECRET_KEY from environment variables for security.
-
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
-
 # ---------------- Database connection function ----------------
-
 def connect_to_db():
-    # Retrieve the full database URL from environment variables
     database_url = os.getenv('DATABASE_URL')
 
     if not database_url:
@@ -31,9 +18,6 @@ def connect_to_db():
 
     conn = None
     try:
-        # Connect using the full DATABASE_URL string directly.
-        # Psycopg2 understands this DSN format natively and handles
-        # parameters like sslmode=require from the URL automatically.
         conn = psycopg2.connect(database_url)
         print("Database connection successful using raw DATABASE_URL string.")
         return conn
@@ -41,9 +25,7 @@ def connect_to_db():
         print(f"Error connecting to DB using DSN string: {e}")
         return None
 
-
 # ---------------- Create users table ----------------
-
 def create_table():
     conn = connect_to_db()
     if conn:
@@ -69,14 +51,9 @@ def create_table():
             cur.close()
             conn.close()
 
-
-# Ensure the table is created when the app starts
-
 create_table()
 
-
 # ---------------- Basic CSS ----------------
-
 base_style = """
 <style>
 body { font-family: Arial, sans-serif; background: #b0aebf; margin:0; padding:0; }
@@ -97,9 +74,7 @@ nav ul li { display: inline; margin: 0 10px; }
 </style>
 """
 
-
 # ---------------- Templates ----------------
-
 index_template = base_style + """
 <div class="container">
 <h1>RKSO FORM</h1>
@@ -130,9 +105,7 @@ index_template = base_style + """
 </div>
 """
 
-
 # ---------------- Routes ----------------
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -169,10 +142,7 @@ def index():
 
     return render_template_string(index_template)
 
-
 # ---------------- Run App ----------------
-
 if __name__ == 'main':
-    # Use the PORT provided by the environment (Render), default to 5000 for local dev
     port = int(os.getenv('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
