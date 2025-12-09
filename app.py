@@ -53,66 +53,85 @@ def create_table():
 create_table()
 
 # ---------------- Basic CSS (UPDATED FOR RESPONSIVENESS) ----------------
-base_style = """
+base_template = """
 <style>
-/* Basic Reset and Body Styling */
-body {
-    font-family: Arial, sans-serif;
-    background: #b0aebf;
+/* --- Basic Reset & Setup --- */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Ensures padding/border are included in element's total width */
 }
 
-/* Responsive Container */
-.container {
-    width: 90%; /* Use percentage for flexibility */
-    max-width: 400px; /* Prevents it from getting too wide on large screens */
-    margin: 50px auto; /* Centers the container */
-    background: #42b9f5;
+body {
+    font-family: Arial, sans-serif;
+    background-color: lightgray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     padding: 20px;
+}
+
+/* --- Container Styling --- */
+.container {
+    background-color: lightblue;
+    padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 0 20px black;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Limits the form width on large screens */
 }
 
 h1 {
     text-align: center;
     color: #333;
+    border-bottom: 2px solid #007bff;
+}
+
+/* --- Form Element Styling --- */
+form {
+    display: flex;
+    flex-direction: column;
 }
 
 label {
-    display: block;
-    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: bold;
     color: #555;
+    display: block;
 }
 
-/* Ensure all input fields are responsive */
-input[type=text],
-input[type=email],
-input[type=tel],
-input[type=date] {
-    width: 100%; /* Takes full width of its parent (minus padding/border due to box-sizing) */
-    padding: 10px; /* Increased padding for better mobile usability */
-    margin-top: 5px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    box-sizing: border-box; /* Crucial for width: 100% to work correctly with padding */
-}
-
-input[type=submit] {
+/* Style for all input types in the form */
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="date"] {
     width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    background: #4CAF50;
-    color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: green;
+    outline: none;
+}
+
+/* Specific styling for the submit button */
+input[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 14px 20px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    box-sizing: border-box;
+    font-size: 18px;
+    transition: background-color 0.3s;
 }
 
-input[type=submit]:hover {
-    background: #45a049;
+input[type="submit"]:hover {
+    background-color: #0056b3;
 }
 
 ul {
@@ -125,43 +144,31 @@ li {
     color: red;
     text-align: center;
 }
-
-/* Media Query for very small screens (e.g., older phones) if needed, though not strictly necessary with the above changes */
-/*
-@media (max-width: 600px) {
-    .container {
-        width: 95%;
-        margin: 20px auto;
-    }
-}
-*/
-
 </style>
 """
-
 # ---------------- Templates ----------------
-index_template = base_style + """
+index_template =base_template + """
 <div class="container">
-<h1>RKSO FORM</h1>
+<h1>RKSO FORM</h1><br />
 <form method="POST" action="/">
 <label>NAME</label>
 <input type="text" name="name" required>
-
+<br />
 <label>MOBILE</label>
 <input type="tel" name="mobile" required>
-
+<br />
 <label>EMAIL</label>
 <input type="email" name="email" required>
-
+<br />
 <label>ADDRESS</label>
 <input type="text" name="address" required>
-
+<br />
 <label>DOB</label>
 <input type="date" name="dob" required>
-
+<br />
 <label>FEEDBACK</label>
 <input type="text" name="feedback" required>
-
+<br /><br />
 <input type="submit" value="SUBMIT">
 </form>
 
