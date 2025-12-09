@@ -52,22 +52,90 @@ def create_table():
 
 create_table()
 
-# ---------------- Basic CSS ----------------
+# ---------------- Basic CSS (UPDATED FOR RESPONSIVENESS) ----------------
 base_style = """
 <style>
-body { font-family: Arial, sans-serif; background: #b0aebf; margin:0; padding:0; }
-.container { width: 350px; margin: 50px auto; background: #42b9f5; padding: 20px;
-             border-radius: 8px; box-shadow: 0 0 20px black; }
-h1 { text-align: center; color: #333; }
-label { display: block; margin-top: 10px; color: #555; }
-input[type=text], input[type=email], input[type=tel], input[type=date] {
-    width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc;
+/* Basic Reset and Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    background: #b0aebf;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Ensures padding/border are included in element's total width */
 }
-input[type=submit] { width: 100%; padding: 10px; margin-top: 15px; background: #4CAF50;
-                     color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-input[type=submit]:hover { background: #45a049; }
-ul { list-style-type: none; padding: 0; }
-li { margin: 5px 0; color: red; text-align: center; }
+
+/* Responsive Container */
+.container {
+    width: 90%; /* Use percentage for flexibility */
+    max-width: 400px; /* Prevents it from getting too wide on large screens */
+    margin: 50px auto; /* Centers the container */
+    background: #42b9f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px black;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    color: #555;
+}
+
+/* Ensure all input fields are responsive */
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=date] {
+    width: 100%; /* Takes full width of its parent (minus padding/border due to box-sizing) */
+    padding: 10px; /* Increased padding for better mobile usability */
+    margin-top: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box; /* Crucial for width: 100% to work correctly with padding */
+}
+
+input[type=submit] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+input[type=submit]:hover {
+    background: #45a049;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin: 5px 0;
+    color: red;
+    text-align: center;
+}
+
+/* Media Query for very small screens (e.g., older phones) if needed, though not strictly necessary with the above changes */
+/*
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        margin: 20px auto;
+    }
+}
+*/
+
 </style>
 """
 
