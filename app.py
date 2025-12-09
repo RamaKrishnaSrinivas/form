@@ -126,8 +126,8 @@ def index():
                     flash("Mobile number already registered!", "red")
                 else:
                     cur.execute(
-                        "INSERT INTO users (name, mobile, email, amount, date) VALUES (%s, %s, %s, %s, %s)",
-                        (name, mobile, email, amount, date)
+                        "INSERT INTO users (name, mobile, email, address, dob, feedback) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (name, mobile, email, address, dob, feedback)
                     )
                     conn.commit()
                     flash("Successfully Saved!", "green")
