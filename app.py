@@ -37,7 +37,7 @@ def create_table():
             name VARCHAR(100) NOT NULL,
             mobile INT UNIQUE NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
-            address INT NOT NULL,
+            address VARCHAR(255) NOT NULL,
             dob DATE NOT NULL,
             feedback VARCHAR(255) NOT NULL
             )
