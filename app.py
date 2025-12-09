@@ -9,6 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
+
 # ---------------- Database connection function ----------------
 def connect_to_db():
     database_url = os.getenv('DATABASE_URL')
@@ -22,8 +23,9 @@ def connect_to_db():
         print("Database connection successful using raw DATABASE_URL string.")
         return conn
     except Exception as e:
-        print(f"Error connecting to DB: {e}")
+        print(f"Error connecting to DB using DSN string: {e}")
         return None
+
 
 # ---------------- Create users table ----------------
 def create_table():
@@ -43,6 +45,7 @@ def create_table():
                 )
             """)
             conn.commit()
+            print("Table 'users' created or already exists.")
         except Exception as e:
             print("Error creating table:", e)
             conn.rollback()
@@ -50,94 +53,34 @@ def create_table():
             cur.close()
             conn.close()
 
+
+# Ensure the table is created when the app starts
 create_table()
 
-# ---------------- Responsive CSS ----------------
+
+# ---------------- Basic CSS ----------------
 base_style = """
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #b0aebf;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* ---- Responsive Form Container ---- */
-    .form-container {
-        width: 90%;
-        max-width: 450px;
-        margin: 40px auto;
-        background: #42b9f5;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    h1 {
-        text-align: center;
-        color: #333;
-    }
-
-    label {
-        display: block;
-        margin-top: 10px;
-        color: #222;
-        font-weight: bold;
-    }
-
-    input[type=text],
-    input[type=email],
-    input[type=tel],
-    input[type=date] {
-        width: 100%;
-        padding: 12px;
-        margin-top: 5px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-    }
-
-    input[type=submit] {
-        width: 100%;
-        padding: 12px;
-        margin-top: 15px;
-        background: #4CAF50;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    input[type=submit]:hover {
-        background: #45a049;
-    }
-
-    ul { list-style-type: none; padding: 0; }
-    li { margin: 5px 0; color: red; text-align: center; }
-
-    /* ---- Mobile View ---- */
-    @media (max-width: 480px) {
-        .form-container {
-            width: 95%;
-            padding: 15px;
-        }
-
-        input[type=text],
-        input[type=email],
-        input[type=tel],
-        input[type=date],
-        input[type=submit] {
-            font-size: 15px;
-            padding: 10px;
-        }
-    }
+body { font-family: Arial, sans-serif; background: #b0aebf; margin:0; padding:0; }
+.container { width: 350px; margin: 50px auto; background: #42b9f5; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px; border-color: black; }
+h1 { text-align: center; color: #333; }
+label { display: block; margin-top: 10px; color: #555; }
+input[type=text], input[type=email], input[type=tel], input[type=date] {
+    width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc;
+}
+input[type=submit] {
+    width: 100%; padding: 10px; margin-top: 15px; background: #4CAF50; color: #fff; border: none; border-radius: 4px; cursor: pointer;
+}
+input[type=submit]:hover { background: #45a049; }
+ul { list-style-type: none; padding: 0; }
+li { margin: 5px 0; color: red; text-align: center; }
 </style>
 """
 
+
 # ---------------- Templates ----------------
 index_template = base_style + """
-<div class="form-container">
+<div class="container">
     <h1>RKSO FORM</h1>
     <form method="POST" action="/">
         <label>NAME</label>
@@ -173,6 +116,7 @@ index_template = base_style + """
 </div>
 """
 
+
 # ---------------- Routes ----------------
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -188,20 +132,21 @@ def index():
         if conn:
             cur = conn.cursor()
             try:
+                # Check if mobile already exists
                 cur.execute("SELECT id FROM users WHERE mobile = %s", (mobile,))
                 if cur.fetchone():
                     flash("Mobile number already registered!", "red")
                 else:
-                    cur.execute(
-                        "INSERT INTO users (name, mobile, email, address, dob, feedback) VALUES (%s, %s, %s, %s, %s, %s)",
-                        (name, mobile, email, address, dob, feedback)
-                    )
+                    cur.execute("""
+                        INSERT INTO users (name, mobile, email, address, dob, feedback)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (name, mobile, email, address, dob, feedback))
                     conn.commit()
                     flash("Successfully Saved!", "green")
                     return redirect(url_for('index'))
             except psycopg2.Error as e:
-                print(f"Database error: {e}") 
-                flash("Error saving your data!", "red")
+                print(f"Database error during insertion: {e}")
+                flash("An error occurred while saving your data.", "red")
                 conn.rollback()
             finally:
                 cur.close()
@@ -209,7 +154,8 @@ def index():
 
     return render_template_string(index_template)
 
+
 # ---------------- Run App ----------------
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)ort=port)
+    app.run(debug=False, host='0.0.0.0', port=port)
